@@ -22,15 +22,16 @@ def main():
     # parser here
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
+        
+
+    # message storage
+
+    messages= [ {"role": "user", "content": args.user_prompt,}, ]
 
     # getting a response array
-    response = client.chat.completions.create(model = "openrouter/free", messages=[
-        {
-            "role": "user",
-            "content": args.user_prompt,
-        }
-    ])
+    response = client.chat.completions.create(model = "openrouter/free", messages=messages)
 
     # getting usage data and checking it
     usage = response.usage
@@ -40,7 +41,8 @@ def main():
     c_tokens = usage.completion_tokens
 
     print(response.choices[0].message.content)
-    print(f"Prompt tokens: {p_tokens}\nResponse tokens: {c_tokens}")
+    if args.verbose == True:
+        print(f"User prompt: {args.user_prompt}\nPrompt tokens: {p_tokens}\nResponse tokens: {c_tokens}")
     
     
 

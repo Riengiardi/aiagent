@@ -22,7 +22,7 @@ def get_file_content(working_directory: str, file_path: str) -> str:
         return file_as_str
     
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
 
     
     

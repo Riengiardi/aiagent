@@ -1,6 +1,8 @@
-import os, argparse
+import os, argparse, prompts, sys
 from dotenv import load_dotenv
 from openai import OpenAI
+from call_function import available_functions
+from functions.call_function import call_function
 
 def main():
 
@@ -26,27 +28,48 @@ def main():
 
     # Storing conversation
     messages = [
+        {"role": "system", "content": prompts.system_prompt},
         {"role": "user", "content": args.user_prompt},
     ]
 
-    # Creating ChatCompletion object
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-    )
+    for _ in range(20):
 
-    # Monitoring token usage for ChatCompletion (--verbose)
-    if response.usage == None:
-        raise RuntimeError("Usage details not found. Possible failed API request.")
-    if args.verbose == True:
-        print(f"User prompt: {messages[0]["content"]}")
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
+        # Creating ChatCompletion object
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            tools=available_functions,
+        )
 
-    # Printing message content from ChatCompletion
-    print(f"Response: {response.choices[0].message.content}")
-    
+        # Monitoring token usage for ChatCompletion (--verbose)
+        if response.usage == None:
+            raise RuntimeError("Usage details not found. Possible failed API request.")
+        if args.verbose == True:
+            print("-------------------------------------------")
+            print(f"User prompt: {messages[1]["content"]}")
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
+            print("-------------------------------------------")
 
+        # Extracting message for later use and adding to message list
+        message = response.choices[0].message
+        messages.append(message)
+
+        # Check for the end of the agent reasoning
+        if message.tool_calls == None:
+            print(f"Response: {message.content}")
+            return "Successfuly finished the calls"
+
+        # Printing tool calls from ChatCompletion
+        for tool_call in message.tool_calls:
+            tool_message = call_function(tool_call)
+            messages.append(tool_message)
+            if args.verbose == True:
+                print(f"-> {tool_message['content']}")
+
+    # if loop time exceeded
+    print("Error: Amount of allowed time exceeded.")
+    sys.exit('1')
 
 if __name__ == "__main__":
     main()

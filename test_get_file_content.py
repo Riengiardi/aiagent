@@ -11,5 +11,6 @@ result = get_file_content("calculator", "lorem.txt")
 print(f"lorem.txt length: {len(result)}")
 print(f"lorem.txt truncated: {'truncated' in result}")
 
-for case in test_cases:
-    print(get_file_content(case[0], case[1]))
+for c in test_cases:
+    print(f"--- Case: {c} ---\n")
+    print(get_file_content(*c))
